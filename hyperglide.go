@@ -99,10 +99,10 @@ func doUpdate(gypath, glpath, home string, mapper LockMapper) error {
 	installer.ResolveTest = true
 	installer.Home = home
 
-	// NOTE(russell_h): The pattern for error checking here seems to be to check
-	// msg.HasErrored(), but there isn't currently anything we would do differently
-	// if an error has occurred.
 	action.Update(installer, false, true)
+	if msg.HasErrored() {
+		return ErrAlreadyReportedError
+	}
 
 	return nil
 }
