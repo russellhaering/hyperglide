@@ -35,6 +35,32 @@ func LoadGlideLock(path string) (*cfg.Lockfile, error) {
 
 type LockMapper func(*cfg.Lock) *cfg.Dependency
 
+func mergeImports(pins cfg.Dependencies, locks cfg.Locks, mapper LockMapper) cfg.Dependencies {
+	imports := map[string]*cfg.Dependency{}
+	merged := cfg.Dependencies{}
+
+	for _, lock := range locks {
+		dep := mapper(lock)
+		imports[dep.Name] = dep
+		merged = append(merged, dep)
+	}
+
+	for _, pin := range pins {
+		existing, ok := imports[pin.Name]
+		if !ok {
+			imports[pin.Name] = pin
+			merged = append(merged, pin)
+			continue
+		}
+
+		existing.Reference = pin.Reference
+		existing.VcsType = pin.VcsType
+		existing.Repository = pin.Repository
+	}
+
+	return merged
+}
+
 func doUpdate(gypath, glpath, home string, mapper LockMapper) error {
 	gy, err := LoadGlideYaml(gypath)
 	if err != nil {
@@ -47,29 +73,9 @@ func doUpdate(gypath, glpath, home string, mapper LockMapper) error {
 	}
 
 	hgy := &cfg.Config{
-		Name: gy.Name,
-	}
-
-	imports := map[string]*cfg.Dependency{}
-
-	for _, lock := range gl.Imports {
-		dep := mapper(lock)
-		imports[dep.Name] = dep
-		hgy.AddImport(dep)
-	}
-
-	for _, thisImport := range gy.Imports {
-		existing, ok := imports[thisImport.Name]
-		if !ok {
-			err = hgy.AddImport(thisImport)
-			if err != nil {
-				return err
-			}
-		}
-
-		existing.Reference = thisImport.Reference
-		existing.VcsType = thisImport.VcsType
-		existing.Repository = thisImport.Repository
+		Name:       gy.Name,
+		Imports:    mergeImports(gy.Imports, gl.Imports, mapper),
+		DevImports: mergeImports(gy.DevImports, gl.DevImports, mapper),
 	}
 
 	err = os.Rename(gypath, gypath+BackupSuffix)
