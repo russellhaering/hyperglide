@@ -118,9 +118,18 @@ func Update(c *cli.Context) error {
 	glpath := c.GlobalString("lock")
 	home := c.GlobalString("home")
 
+	targets := map[string]struct{}{}
+	for _, name := range c.Args() {
+		targets[name] = struct{}{}
+	}
+
 	return doUpdate(gypath, glpath, home, func(lock *cfg.Lock) *cfg.Dependency {
 		dep := cfg.DependencyFromLock(lock)
-		dep.Reference = "master"
+		_, ok := targets[dep.Name]
+		if len(c.Args()) == 0 || ok {
+			dep.Reference = "master"
+		}
+
 		return dep
 	})
 }
@@ -169,7 +178,7 @@ func main() {
 		{
 			Name:      "update",
 			ShortName: "up",
-			Usage:     "Update everything",
+			Usage:     "Update everything - arguments are treated as an exclusive list of packages to update",
 			Action:    Update,
 		},
 		{
