@@ -2,10 +2,11 @@
 
 [Glide](https://github.com/Masterminds/glide) is a tool that makes it easy to manage `vendor` directories in Go.
 
-Hyperglide is an opinionated wrapper around Glide which supports only two operations:
+Hyperglide is an opinionated wrapper around Glide which supports only three operations:
 
 1. Updating every non-pinned dependency to the latest master (`hyperglide up`)
-2. Installing new dependencies, and only new dependencies (`hyperglide newdep`)
+2. Updating a single dependency to the latest master (`hyperglide up <package>`)
+3. Installing new dependencies, and only new dependencies (`hyperglide newdep`)
 
 ## How it Works
 
