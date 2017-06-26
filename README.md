@@ -8,6 +8,12 @@ Hyperglide is an opinionated wrapper around Glide which supports only three oper
 2. Updating a single dependency to the latest master (`hyperglide up <package>`)
 3. Installing new dependencies, and only new dependencies (`hyperglide newdep`)
 
+## Installing
+
+```
+go get -u github.com/russellhaering/hyperglide
+```
+
 ## How it Works
 
 ### Updating Dependencies
