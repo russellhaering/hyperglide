@@ -127,7 +127,7 @@ func Update(c *cli.Context) error {
 		dep := cfg.DependencyFromLock(lock)
 		_, ok := targets[dep.Name]
 		if len(c.Args()) == 0 || ok {
-			dep.Reference = "master"
+			dep.Reference = "origin/master"
 		}
 
 		return dep
