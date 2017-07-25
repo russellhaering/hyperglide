@@ -359,26 +359,33 @@ func (i *Installer) Export(conf *cfg.Config) error {
 	// move it over to the newly-generated vendor dir - the user is probably
 	// submoduling, and it's easy enough not to break their setup.
 	ivg := filepath.Join(i.VendorPath(), ".git")
-	_, err = os.Stat(ivg)
+	gitInfo, err := os.Stat(ivg)
 	if err == nil {
-		msg.Info("Preserving existing vendor/.git directory")
+		msg.Info("Preserving existing vendor/.git")
 		vpg := filepath.Join(vp, ".git")
 		err = os.Rename(ivg, vpg)
 
 		if terr, ok := err.(*os.LinkError); ok {
-			err = fixcle(ivg, vpg, terr)
+			if gitInfo.IsDir() {
+				err = fixcle(ivg, vpg, terr)
+			} else {
+				// When this is a submodule, .git is just a file. Don't try to copy
+				// it as a directory in this case (see #828).
+				err = gpath.CopyFile(ivg, vpg)
+			}
+
 			if err != nil {
-				msg.Warn("Failed to preserve existing vendor/.git directory")
+				msg.Warn("Failed to preserve existing vendor/.git")
 			}
 		}
 	}
 
-	err = os.RemoveAll(i.VendorPath())
+	err = gpath.CustomRemoveAll(i.VendorPath())
 	if err != nil {
 		return err
 	}
 
-	err = os.Rename(vp, i.VendorPath())
+	err = gpath.CustomRename(vp, i.VendorPath())
 	if terr, ok := err.(*os.LinkError); ok {
 		return fixcle(vp, i.VendorPath(), terr)
 	}
